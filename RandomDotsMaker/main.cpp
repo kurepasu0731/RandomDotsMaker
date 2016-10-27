@@ -9,7 +9,7 @@
 #include<iostream> //入出力ライブラリ
 #include<fstream> //iostreamのファイル入出力をサポート
 
-#define DOTNUM 80
+#define DOTNUM 100
 #define DOTDIST 30
 #define DOTSIZE 10 //直径
 #define PROJECTOR_WIDTH 1280
@@ -17,6 +17,9 @@
 
 #define USEPINHOLE 1 //ピンホールするかどうか
 #define PINHOLERAD 200 //ピンホールの直径の最大
+
+#define HOLESIZE 50 //真ん中部分の半径
+#define BANDSIZE 50 //フェードアウトしてるところの幅 (HOLESIZE + BANDSIZE) * 2 = PINHOLERAD
 
 #define OFFSET_X 10
 #define OFFSET_Y 10
@@ -53,7 +56,7 @@ int main(int argc, char** argv)
 
 		if(USEPINHOLE)
 		{
-			if(getDistance(center, p) < (PINHOLERAD + DOTSIZE/2))
+			if(getDistance(center, p) < (PINHOLERAD/2 + DOTSIZE/2))
 			{
 				continue;
 			}
@@ -80,10 +83,14 @@ int main(int argc, char** argv)
 			for(int x = 0; x < PROJECTOR_WIDTH; x++)
 			{
 				cv::Point p(x, y);
-				double d = getDistance(center, p);
-				if(d < PINHOLERAD)
+				int d = (int)(getDistance(center, p) + 0.5);
+				if(d <= HOLESIZE)
 				{
-					dstImg.data[y * dstImg.step + x * dstImg.elemSize() + 3] = 255 * d / PINHOLERAD;
+					dstImg.data[y * dstImg.step + x * dstImg.elemSize() + 3] = 0;
+				}
+				else if(d > HOLESIZE && d < (HOLESIZE + BANDSIZE) )
+				{
+					dstImg.data[y * dstImg.step + x * dstImg.elemSize() + 3] =  255 * (d-HOLESIZE) / BANDSIZE;
 				}
 			}
 		}
